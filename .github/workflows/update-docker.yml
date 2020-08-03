@@ -4,7 +4,6 @@ on:
   schedule:
     - cron: '30 12 * * *'
   pull_request:
-    types: opened
   push:
     branches: master
 
@@ -14,12 +13,14 @@ jobs:
     steps:
       - name: 'setup pr/push env'
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
-        env:
+        uses: allenevans/set-env@v1.0.0
+        with:
           TAG: 4.4
           TAG_MAJOR: 4
       - name: 'setup nightly env'
         if: ${{ github.event_name == 'schedule' }}
-        env:
+        uses: allenevans/set-env@v1.0.0
+        with:
           TAG: 4.4-nightly
           TAG_MAJOR: 4-nightly
       - uses: actions/checkout@v2
