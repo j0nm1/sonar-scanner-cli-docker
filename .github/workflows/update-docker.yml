@@ -1,0 +1,39 @@
+name: Update docker image
+
+on:
+  schedule:
+    - cron: '30 12 * * *'
+  pull_request:
+    types: opened
+  push:
+    branches: master
+
+jobs:
+  update-image-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'setup pr/push env'
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        env:
+          TAG: 4.4
+          TAG_MAJOR: 4
+      - name: 'setup nightly env'
+        if: ${{ github.event_name == 'schedule' }}
+        env:
+          TAG: 4.4-nightly
+          TAG_MAJOR: 4-nightly
+      - uses: actions/checkout@v2
+        with:
+          ref: 4.4
+      - uses: actions/checkout@v2
+        with:
+          repository: SonarSource/sonar-scanning-examples
+          path: target_repository
+      - name: Build image
+        run: docker build "4" --tag "sonarsource/sonar-scanner-cli:$TAG" --tag "sonarsource/sonar-scanner-cli:$TAG_MAJOR" --tag "sonarsource/sonar-scanner-cli:latest"
+      - name: Test image
+        run: ./run-tests.sh "sonarsource/sonar-scanner-cli:4.4"
+      - name: Push image
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'push' }}
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} && docker push sonarsource/sonar-scanner-cli
+
