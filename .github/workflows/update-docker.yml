@@ -8,7 +8,7 @@ on:
     branches: master
 
 jobs:
-  update-image-dependencies:
+  update-docker-image:
     runs-on: ubuntu-latest
     steps:
       - name: 'setup pr/push env'
@@ -30,10 +30,12 @@ jobs:
         with:
           repository: SonarSource/sonar-scanning-examples
           path: target_repository
+      - name: Show tags
+        run: echo "building $TAG_MAJOR and $TAG"
       - name: Build image
         run: docker build "4" --tag "sonarsource/sonar-scanner-cli:$TAG" --tag "sonarsource/sonar-scanner-cli:$TAG_MAJOR" --tag "sonarsource/sonar-scanner-cli:latest"
       - name: Test image
-        run: ./run-tests.sh "sonarsource/sonar-scanner-cli:4.4"
+        run: ./run-tests.sh "sonarsource/sonar-scanner-cli:$TAG"
       - name: Push image
         if: ${{ github.event_name == 'schedule' || github.event_name == 'push' }}
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} && docker push sonarsource/sonar-scanner-cli
